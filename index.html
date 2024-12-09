@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>物流配送优化系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* 标题样式 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1677ff, #4096ff);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .author {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+
+        /* 容器样式 */
+        .container {
+            display: grid;
+            grid-template-columns: minmax(300px, 320px) 1fr;
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+
+        /* 输入区域样式 */
+        .input-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            height: fit-content;
+        }
+
+        .input-section:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .input-section h2 {
+            color: #1677ff;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            border-color: #1677ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            outline: none;
+        }
+
+        /* 按钮样式 */
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        button:first-of-type {
+            background: #1677ff;
+            color: white;
+        }
+
+        button:nth-of-type(2) {
+            background: #52c41a;
+            color: white;
+        }
+
+        button:last-of-type {
+            background: #ff4d4f;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* 可视化区域样式 */
+        .visualization-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            min-height: 700px;
+            transition: all 0.3s ease;
+        }
+
+        .visualization-section:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 结果显示样式 */
+        #results {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f6f6f6;
+            border-radius: 10px;
+        }
+
+        #results h3 {
+            color: #1677ff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        #results p {
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        #results p:last-child {
+            border-bottom: none;
+        }
+
+        /* 路线分析样式 */
+        #routeAnalysis {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f6f6f6;
+            border-radius: 6px;
+        }
+
+        #routeAnalysis h3 {
+            color: #1677ff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        #routeDetails {
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        #routeDetails p {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+
+        #routeDetails strong {
+            color: #1677ff;
+        }
+
+        .demand-info {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .visualization-section {
+                min-height: 500px;
+            }
+            
+            .input-section {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 0 5px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .header {
+                margin-bottom: 15px;
+                padding: 15px;
+            }
+            
+            .subtitle {
+                font-size: 1em;
+            }
+            
+            .input-section, .visualization-section {
+                padding: 12px;
+                border-radius: 10px;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            button {
+                padding: 10px;
+        }
+
+        /* 页脚样式 */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            background: linear-gradient(135deg, #1677ff, #4096ff);
+            color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .footer a:hover {
+            opacity: 0.8;
+        }
+
+        .copyright {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .contact-info {
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>物流配送优化系统</h1>
+        <div class="author">作者：苏传毫</div>
+        <div class="subtitle">基于节约算法的多仓库配送路径优化</div>
+    </div>
+    
+    <div class="container">
+        <div class="input-section">
+            <h2>参数设置</h2>
+            <div class="form-group">
+                <label for="pointCount">配送点数量:</label>
+                <input type="number" id="pointCount" min="1" value="15">
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>需求量范围(吨):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="minDemand" min="1" value="10" placeholder="最小值" style="width: 45%;">
+                        <input type="number" id="maxDemand" min="1" value="30" placeholder="最大值" style="width: 45%;">
+                    </div>
+                    <div class="demand-info">设置每个配送点的需求量范围</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="warehouseCount">仓库数量:</label>
+                <input type="number" id="warehouseCount" min="1" value="4">
+                <div class="demand-info">每个仓库供应量: 10-30吨</div>
+            </div>
+            <div class="form-group">
+                <label for="maxLoad">货车最大载重(吨):</label>
+                <input type="number" id="maxLoad" min="1" value="30">
+            </div>
+            <div class="form-group">
+                <label for="costPerKm">每公里运输成本(元):</label>
+                <input type="number" id="costPerKm" min="0" step="0.1" value="2.5">
+            </div>
+            
+            <button onclick="generateRandomPoints()">随机生成数据</button>
+            <button onclick="calculateRoute()">计算最优路径</button>
+            <button onclick="clearData()" style="background-color: #ff4d4f;">清空数据</button>
+            
+            <div id="results">
+                <h3>计算结果</h3>
+                <p>总距离: <span id="totalDistance">0</span> 公里</p>
+                <p>总成本: <span id="totalCost">0</span> 元</p>
+                <p>预计用时: <span id="estimatedTime">0</span> 小时</p>
+                <p>总需求量: <span id="totalDemand">0</span> 吨</p>
+                <p>使用车辆: <span id="usedVehicles">0</span> 辆</p>
+            </div>
+
+            <div id="warehouseInfo" style="margin-top: 20px; padding: 15px; background: #f6f6f6; border-radius: 6px;">
+                <h3>仓库库存信息</h3>
+                <div id="warehouseDetails" style="font-size: 14px; line-height: 1.5;"></div>
+            </div>
+
+            <div id="routeAnalysis" style="margin-top: 20px; padding: 15px; background: #f6f6f6; border-radius: 6px;">
+                <h3>配送路线解析</h3>
+                <div id="routeDetails" style="font-size: 14px; line-height: 1.5;"></div>
+            </div>
+        </div>
+        
+        <div class="visualization-section">
+            <canvas id="deliveryMap"></canvas>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>物流配送优化系统</p>
+        <p class="copyright">© 2024 苏传毫. All Rights Reserved.</p>
+        <div class="contact-info">
+            <p>联系方式: 2422864901@qq.com</p>
+        </div>
+    </div>
+
+    <script>
+        // 定义路线颜色数组
+        const routeColors = [
+            'rgba(82, 196, 26, 0.8)',  // 绿色
+            'rgba(24, 144, 255, 0.8)', // 蓝色
+            'rgba(245, 34, 45, 0.8)',  // 红色
+            'rgba(250, 140, 22, 0.8)', // 橙色
+            'rgba(114, 46, 209, 0.8)', // 紫色
+            'rgba(19, 194, 194, 0.8)', // 青色
+            'rgba(250, 219, 20, 0.8)', // 黄色
+            'rgba(235, 47, 150, 0.8)', // 粉色
+        ];
+
+        let deliveryMap;
+        let points = [];
+        let warehouses = [];
+        let routes = [];
+        let vehicleCount = 3;
+
+        // 生成随机点
+        function generateRandomPoints() {
+            const count = parseInt(document.getElementById('pointCount').value);
+            const warehouseCount = parseInt(document.getElementById('warehouseCount').value);
+            const minDemand = parseInt(document.getElementById('minDemand').value);
+            const maxDemand = parseInt(document.getElementById('maxDemand').value);
+            
+            points = [];
+            warehouses = [];
+            routes = [];
+            
+            // 先生成配送点以计算总需求量
+            for (let i = 0; i < count; i++) {
+                const demand = Math.floor(Math.random() * (maxDemand - minDemand)) + minDemand;
+                points.push({
+                    x: 0, // 临时坐标
+                    y: 0,
+                    demand: demand,
+                    id: i + 1  // 添加序号
+                });
+            }
+            
+            // 计算总需求量
+            const totalDemand = points.reduce((sum, point) => sum + point.demand, 0);
+            // 计算所需的最小总库存量（总需求量的1.67倍，确保60%库存能满足需求）
+            const minTotalSupply = Math.ceil(totalDemand * 1.67);
+            // 计算每个仓库的平均最小库存量
+            const avgMinSupply = Math.ceil(minTotalSupply / warehouseCount);
+            
+            // 首先生成仓库
+            for (let i = 0; i < warehouseCount; i++) {
+                let x, y, isValid;
+                do {
+                    isValid = true;
+                    x = Math.floor(Math.random() * 80) + 10;
+                    y = Math.floor(Math.random() * 80) + 10;
+                    
+                    // 检查与现有仓库的距离
+                    for (const warehouse of warehouses) {
+                        const distance = Math.sqrt(
+                            Math.pow(warehouse.x - x, 2) + 
+                            Math.pow(warehouse.y - y, 2)
+                        );
+                        if (distance < 35) {
+                            isValid = false;
+                            break;
+                        }
+                    }
+                } while (!isValid);
+                
+                // 生成随机库存量，确保不小于平均最小库存量
+                const minSupply = avgMinSupply;
+                const maxSupply = avgMinSupply * 1.5;
+                const supply = Math.floor(Math.random() * (maxSupply - minSupply)) + minSupply;
+                
+                warehouses.push({
+                    x: x,
+                    y: y,
+                    name: `仓库${i + 1}`,
+                    supply: supply
+                });
+            }
+            
+            // 清空并重新生成配送点的实际坐标
+            points = [];
+            // 然后生成配送点
+            for (let i = 0; i < count; i++) {
+                let x, y, isValid;
+                let attempts = 0;
+                do {
+                    isValid = true;
+                    // 使用更均匀的分布
+                    x = Math.floor(Math.random() * 70) + 15;
+                    y = Math.floor(Math.random() * 70) + 15;
+                    
+                    // 增加最大尝试次数避免死循环
+                    attempts++;
+                    if (attempts > 100) {
+                        console.warn('无法找到合适的位置，跳过此点');
+                        break;
+                    }
+                    
+                    // 检查与现有配送点的距离
+                    for (const point of points) {
+                        const distance = Math.sqrt(
+                            Math.pow(point.x - x, 2) + 
+                            Math.pow(point.y - y, 2)
+                        );
+                        if (distance < 5) {
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    
+                    // 检查与所有仓库的距离
+                    if (isValid) {
+                        for (const warehouse of warehouses) {
+                            const distance = Math.sqrt(
+                                Math.pow(warehouse.x - x, 2) + 
+                                Math.pow(warehouse.y - y, 2)
+                            );
+                            if (distance < 8) {
+                                isValid = false;
+                                break;
+                            }
+                        }
+                    }
+                } while (!isValid);
+                
+                const demand = Math.floor(Math.random() * (maxDemand - minDemand)) + minDemand;
+                points.push({
+                    x: x,
+                    y: y,
+                    demand: demand,
+                    id: i + 1  // 添加序号
+                });
+            }
+            
+            // 更新显示
+            deliveryMap.data.datasets[0].data = points;
+            deliveryMap.data.datasets[1].data = warehouses;
+            deliveryMap.data.datasets[2].data = [];
+            deliveryMap.update();
+            
+            // 更新统计信息
+            updateStats();
+        }
+
+        // 初始化地图
+        function initMap() {
+            const canvas = document.getElementById('deliveryMap');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置画布大小
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            deliveryMap = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: '配送点',
+                            data: [],
+                            backgroundColor: '#ff4d4f',
+                            pointRadius: 8,
+                            pointHoverRadius: 10
+                        },
+                        {
+                            label: '仓库',
+                            data: [],
+                            backgroundColor: '#1890ff',
+                            pointRadius: 12,
+                            pointHoverRadius: 14,
+                            pointStyle: 'triangle'
+                        },
+                        {
+                            label: '配送路线',
+                            data: [],
+                            showLine: true,
+                            fill: false,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.1,
+                            segment: {
+                                borderColor: ctx => {
+                                    let routeIndex = 0;
+                                    const data = ctx.chart.data.datasets[2].data;
+                                    
+                                    for (let i = 0; i < data.length; i++) {
+                                        if (i >= ctx.p0DataIndex) break;
+                                        if (data[i].x === null) routeIndex++;
+                                    }
+                                    
+                                    return routeColors[routeIndex % routeColors.length];
+                                }
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                display: true
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                display: true
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const point = context.raw;
+                                    if (point.name) {
+                                        let labels = [`${point.name}`];
+                                        if (typeof point.supply !== 'undefined') {
+                                            labels.push(`库存量: ${point.supply}吨`);
+                                        }
+                                        return labels;
+                                    } else if (point.demand) {
+                                        return [
+                                            `配送点 ${point.id}`,
+                                            `需求量: ${point.demand}吨`
+                                        ];
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'arrows',
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        let routeIndex = 0;
+                        
+                        // 遍历路线数据
+                        for (let i = 0; i < chart.data.datasets[2].data.length - 1; i++) {
+                            const point = chart.data.datasets[2].data[i];
+                            const nextPoint = chart.data.datasets[2].data[i + 1];
+                            
+                            // 如果遇到分隔符，增加路线引
+                            if (point.x === null) {
+                                routeIndex++;
+                                continue;
+                            }
+                            
+                            // 如果当前点和下一个点都是有效坐标点（是分隔符
+                            if (point.x !== null && nextPoint.x !== null) {
+                                const startX = chart.scales.x.getPixelForValue(point.x);
+                                const startY = chart.scales.y.getPixelForValue(point.y);
+                                const endX = chart.scales.x.getPixelForValue(nextPoint.x);
+                                const endY = chart.scales.y.getPixelForValue(nextPoint.y);
+                                
+                                // 计算中点
+                                const midX = (startX + endX) / 2;
+                                const midY = (startY + endY) / 2;
+                                
+                                // 计算角度
+                                const angle = Math.atan2(endY - startY, endX - startX);
+                                
+                                // 绘制箭头
+                                ctx.save();
+                                ctx.translate(midX, midY);
+                                ctx.rotate(angle);
+                                drawArrow(ctx, false, routeColors[routeIndex % routeColors.length]);
+                                ctx.restore();
+                            }
+                        }
+                    }
+                }]
+            });
+        }
+
+        // 修改箭头绘制函数
+        function drawArrow(ctx, isReturn, color) {
+            const arrowColor = color || (isReturn ? '#ff4d4f' : '#52c41a');
+            
+            // 增加箭头大小
+            ctx.beginPath();
+            ctx.moveTo(-12, 0);
+            ctx.lineTo(12, 0);
+            ctx.strokeStyle = arrowColor;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // 增大箭头头部
+            ctx.beginPath();
+            ctx.moveTo(12, 0);
+            ctx.lineTo(6, -5);
+            ctx.lineTo(6, 5);
+            ctx.closePath();
+            ctx.fillStyle = arrowColor;
+            ctx.fill();
+        }
+
+        // 修改计算路线函数
+        function calculateRoute() {
+            if (points.length === 0 || warehouses.length === 0) {
+                alert('请先生成数据！');
+                return;
+            }
+            
+            // 添加加载提示
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                z-index: 1000;
+            `;
+            loadingDiv.textContent = '正在计算路线...';
+            document.body.appendChild(loadingDiv);
+            
+            try {
+                const costPerKm = parseFloat(document.getElementById('costPerKm').value);
+                let totalDistance = 0;
+                
+                document.body.style.cursor = 'wait';
+                
+                // 清空现有路线
+                deliveryMap.data.datasets[2].data = [];
+                deliveryMap.update();
+                
+                routes = savingsAlgorithm(points, warehouses);
+                
+                // 计算总距离
+                for (let i = 0; i < routes.length - 1; i++) {
+                    if (routes[i].x !== null && routes[i+1].x !== null) {
+                        totalDistance += calculateDistance(routes[i], routes[i+1]);
+                    }
+                }
+                
+                // 直接显示路线
+                deliveryMap.data.datasets[2].data = routes;
+                deliveryMap.update();
+                
+                // 更新结果显示
+                document.getElementById('totalDistance').textContent = totalDistance.toFixed(2);
+                document.getElementById('totalCost').textContent = (totalDistance * costPerKm).toFixed(2);
+                document.getElementById('estimatedTime').textContent = (totalDistance / 50).toFixed(2);
+                
+                // 生成路线解析文字
+                generateRouteAnalysis(routes);
+                
+            } catch (error) {
+                console.error('计算路径时出错:', error);
+                alert('计算过程出现错误，请尝试减少数据量或刷新页面。');
+            } finally {
+                document.body.removeChild(loadingDiv);
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        // 修改路线解析函数
+        function generateRouteAnalysis(routes) {
+            let analysisText = '';
+            let currentRoute = [];
+            let routeNumber = 1;
+            
+            routes.forEach(point => {
+                if (point.x === null) {
+                    if (currentRoute.length > 0) {
+                        const warehouse = currentRoute[0];
+                        analysisText += `<p><strong>路线 ${routeNumber}:</strong> `;
+                        analysisText += `从${warehouse.name}(${warehouse.x.toFixed(1)}, ${warehouse.y.toFixed(1)}) 出发 → `;
+                        
+                        for (let i = 1; i < currentRoute.length - 1; i++) {
+                            const point = currentRoute[i];
+                            analysisText += `配送点${point.id}(${point.x.toFixed(1)}, ${point.y.toFixed(1)}, 需求:${point.demand}吨) → `;
+                        }
+                        
+                        analysisText += `返回${warehouse.name}(${warehouse.x.toFixed(1)}, ${warehouse.y.toFixed(1)})</p>`;
+                        routeNumber++;
+                    }
+                    currentRoute = [];
+                } else {
+                    currentRoute.push(point);
+                }
+            });
+            
+            // 添加每个仓库的配送点统计
+            analysisText += '<div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">';
+            analysisText += '<strong>仓库配送统计：</strong><br>';
+            let warehouseStats = new Map();
+            
+            routes.forEach(point => {
+                if (point.x !== null && point.name && point.name.startsWith('仓库')) {
+                    const warehouseNum = point.name.slice(-1);
+                    warehouseStats.set(warehouseNum, (warehouseStats.get(warehouseNum) || 0) + 1);
+                }
+            });
+            
+            warehouseStats.forEach((count, warehouseNum) => {
+                // 因为每个路线都包含仓库两次（出发和返回），所以实际配送点数量是count/2
+                analysisText += `仓库${warehouseNum}: ${Math.floor(count/2)} 个配送点<br>`;
+            });
+            analysisText += '</div>';
+            
+            document.getElementById('routeDetails').innerHTML = analysisText;
+        }
+
+        // 修改清除数据函数
+        function clearData() {
+            points = [];
+            warehouses = [];
+            routes = [];
+            deliveryMap.data.datasets[2].data = [];
+            deliveryMap.update();
+            document.getElementById('totalDistance').textContent = '0';
+            document.getElementById('totalCost').textContent = '0';
+            document.getElementById('estimatedTime').textContent = '0';
+            document.getElementById('routeDetails').innerHTML = '';
+            document.getElementById('warehouseDetails').innerHTML = '';
+        }
+
+        // 修改节约算法实现
+        function savingsAlgorithm(points, warehouses) {
+            let routes = [];
+            let usedPoints = new Set();
+            let warehouseLoads = new Map();
+            let warehouseUsedCapacity = new Map(); // 记录每个仓库已使用的库存量
+            const maxLoad = parseFloat(document.getElementById('maxLoad').value);
+            
+            // 初始化仓库负载和库存使用量
+            warehouses.forEach((_, index) => {
+                warehouseLoads.set(index, 0);
+                warehouseUsedCapacity.set(index, 0);
+            });
+            
+            // 均分配点
+            const avgPointsPerWarehouse = Math.ceil(points.length / warehouses.length);
+            
+            // 计算所有可能的配送组合及其总距离
+            let allPairs = [];
+            warehouses.forEach((warehouse, warehouseIndex) => {
+                for (let i = 0; i < points.length; i++) {
+                    for (let j = i + 1; j < points.length; j++) {
+                        const totalDemand = points[i].demand + points[j].demand;
+                        // 检查是否超出仓库库存
+                        const currentUsedCapacity = warehouseUsedCapacity.get(warehouseIndex);
+                        const remainingCapacity = warehouse.supply - currentUsedCapacity;
+                        
+                        // 如果需求量超过剩余库存，跳过这个组合
+                        if (totalDemand > remainingCapacity) {
+                            continue;
+                        }
+                        
+                        const totalDistance = calculateDistance(warehouse, points[i]) +
+                                           calculateDistance(points[i], points[j]) +
+                                           calculateDistance(points[j], warehouse);
+                        
+                        allPairs.push({
+                            points: [i, j],
+                            warehouseIndex: warehouseIndex,
+                            distance: totalDistance,
+                            demand: totalDemand
+                        });
+                    }
+                }
+            });
+            
+            // 按总距离升序排序
+            allPairs.sort((a, b) => a.distance - b.distance);
+            
+            // 根据距离构建线
+            allPairs.forEach(pair => {
+                const [i, j] = pair.points;
+                const warehouseIndex = pair.warehouseIndex;
+                const warehouse = warehouses[warehouseIndex];
+                const currentWarehousePoints = warehouseLoads.get(warehouseIndex);
+                const currentUsedCapacity = warehouseUsedCapacity.get(warehouseIndex);
+                
+                if (!usedPoints.has(i) && !usedPoints.has(j)) {
+                    const totalDemand = pair.demand;
+                    if (totalDemand <= maxLoad && 
+                        currentWarehousePoints < avgPointsPerWarehouse * 1.5 &&
+                        currentUsedCapacity + totalDemand <= warehouse.supply) {
+                        routes.push(
+                            {x: warehouse.x, y: warehouse.y, name: warehouse.name},
+                            {x: points[i].x, y: points[i].y, demand: points[i].demand},
+                            {x: points[j].x, y: points[j].y, demand: points[j].demand},
+                            {x: warehouse.x, y: warehouse.y, name: warehouse.name},
+                            {x: null, y: null}
+                        );
+                        usedPoints.add(i);
+                        usedPoints.add(j);
+                        warehouseLoads.set(warehouseIndex, currentWarehousePoints + 2);
+                        warehouseUsedCapacity.set(warehouseIndex, currentUsedCapacity + totalDemand);
+                    }
+                }
+            });
+            
+            // 处理未分配的点
+            points.forEach((point, index) => {
+                if (!usedPoints.has(index)) {
+                    let minDistance = Infinity;
+                    let nearestWarehouseIndex = 0;
+                    let canAssign = false;
+                    
+                    warehouses.forEach((warehouse, warehouseIndex) => {
+                        const distance = calculateDistance(point, warehouse);
+                        const currentUsedCapacity = warehouseUsedCapacity.get(warehouseIndex);
+                        const remainingCapacity = warehouse.supply - currentUsedCapacity;
+                        
+                        if (distance < minDistance && 
+                            warehouseLoads.get(warehouseIndex) < avgPointsPerWarehouse * 1.5 &&
+                            point.demand <= remainingCapacity) {
+                            minDistance = distance;
+                            nearestWarehouseIndex = warehouseIndex;
+                            canAssign = true;
+                        }
+                    });
+                    
+                    if (canAssign && point.demand <= maxLoad) {
+                        const warehouse = warehouses[nearestWarehouseIndex];
+                        const currentUsedCapacity = warehouseUsedCapacity.get(nearestWarehouseIndex);
+                        routes.push(
+                            {x: warehouse.x, y: warehouse.y, name: warehouse.name},
+                            {x: point.x, y: point.y, demand: point.demand},
+                            {x: warehouse.x, y: warehouse.y, name: warehouse.name},
+                            {x: null, y: null}
+                        );
+                        warehouseLoads.set(nearestWarehouseIndex, 
+                            warehouseLoads.get(nearestWarehouseIndex) + 1);
+                        warehouseUsedCapacity.set(nearestWarehouseIndex, 
+                            currentUsedCapacity + point.demand);
+                    }
+                }
+            });
+            
+            return routes;
+        }
+
+        // 计算两点之间的距离
+        function calculateDistance(point1, point2) {
+            return Math.sqrt(
+                Math.pow(point2.x - point1.x, 2) + 
+                Math.pow(point2.y - point1.y, 2)
+            );
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const totalDemand = points.reduce((sum, point) => sum + point.demand, 0);
+            document.getElementById('totalDemand').textContent = totalDemand;
+            document.getElementById('totalVehicles').textContent = vehicleCount;
+            document.getElementById('usedVehicles').textContent = routes.length;
+            
+            // 更新仓库库存信息
+            let warehouseInfo = '';
+            warehouses.forEach(warehouse => {
+                const usedCapacity = routes.reduce((sum, point) => {
+                    if (point.x !== null && point.name === warehouse.name) {
+                        // 找到下一个非null点的需求量
+                        const nextPoint = routes[routes.indexOf(point) + 1];
+                        return sum + (nextPoint && nextPoint.demand ? nextPoint.demand : 0);
+                    }
+                    return sum;
+                }, 0);
+                
+                const remainingCapacity = warehouse.supply - usedCapacity;
+                const utilizationRate = ((usedCapacity / warehouse.supply) * 100).toFixed(1);
+                
+                warehouseInfo += `
+                    <div style="padding: 10px; background: white; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
+                        <strong>${warehouse.name}</strong><br>
+                        总库存: ${warehouse.supply} 吨<br>
+                        已使用: ${usedCapacity} 吨<br>
+                        剩余: ${remainingCapacity} 吨<br>
+                        利用率: ${utilizationRate}%
+                    </div>
+                `;
+            });
+            
+            document.getElementById('warehouseDetails').innerHTML = warehouseInfo;
+        }
+
+        // 更新地图显示
+        function updateMap() {
+            deliveryMap.data.datasets[0].data = points;
+            deliveryMap.data.datasets[1].data = warehouses;
+            deliveryMap.data.datasets[2].data = routes;
+            deliveryMap.update();
+        }
+
+        // 优化移动端画布大小调整
+        function resizeCanvas() {
+            const canvas = document.getElementById('deliveryMap');
+            const container = canvas.parentElement;
+            
+            // 在移动端设置合适的高度
+            if (window.innerWidth <= 768) {
+                canvas.height = Math.min(window.innerHeight * 0.5, 400);
+            } else {
+                canvas.height = container.clientHeight;
+            }
+            canvas.width = container.clientWidth;
+            
+            if (deliveryMap) {
+                deliveryMap.resize();
+            }
+        }
+
+        // 修改现有的 window.onresize
+        window.onresize = function() {
+            resizeCanvas();
+            updateMap();
+        };
+
+        // 在初始化时调用
+        window.onload = function() {
+            resizeCanvas();
+            initMap();
+            updateMap();
+        };
+
+        // 优化触摸事件处理
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1 || e.target.tagName === 'CANVAS') {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 1 || e.target.tagName === 'CANVAS') {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // 防止画布上的双击缩放
+            const canvas = document.getElementById('deliveryMap');
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+        });
+    </script>
+</body>
+</html>
